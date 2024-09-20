@@ -222,15 +222,7 @@ class CloudTaskWrapper(object):
         self._handler_secret = DCTConfig.handler_secret()
         self._is_remote = is_remote
         self._headers = headers or {}
-        if http_service_account is None:
-            # Running AppEngineTask. Not running HTTP-task
-            self._http_service_account = http_service_account
-        elif type(http_service_account) == bool and http_service_account:
-            # Running HTTP-task with default service account
-            self._http_service_account = DCTConfig.http_service_account()
-        else:
-            # Running HTTP-task with specified service account.
-            self._http_service_account = http_service_account
+        self._http_service_account = DCTConfig.http_service_account()
         self.setup()
 
     def setup(self):

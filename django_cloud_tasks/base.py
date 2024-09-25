@@ -163,20 +163,28 @@ class CloudTaskMockRequest(object):
 class EmulatedTask(object):
     def __init__(self, body, task_handler_url=None):
         self.body = body
+        self._task_type = 'httpRequest' if 'httpRequest' in self.body['task'] else 'appEngineHttpRequest'
         self._task_handler_url = task_handler_url or DCTConfig.task_handler_root_url()
         self.setup()
 
     def setup(self):
-        payload = self.body['task']['appEngineHttpRequest']['body']
+        payload = self.body['task'][self._task_type]['body']
         decoded = json.loads(base64.b64decode(payload))
-        self.body['task']['appEngineHttpRequest']['body'] = decoded
+        self.body['task'][self._task_type]['body'] = decoded
 
     def get_json_body(self):
-        body = self.body['task']['appEngineHttpRequest']['body']
+        body = self.body['task'][self._task_type]['body']
         return json.dumps(body)
 
     @property
     def request_headers(self):
+        if self._task_type == 'httpRequest':
+            return {
+                'HTTP_X_CLOUDTASKS_TASKNAME': uuid.uuid4().hex,
+                'HTTP_X_CLOUDTASKS_QUEUENAME': 'emulated',
+                DJANGO_HANDLER_SECRET_HEADER_NAME: DCTConfig.handler_secret()
+            }
+
         return {
             'HTTP_X_APPENGINE_TASKNAME': uuid.uuid4().hex,
             'HTTP_X_APPENGINE_QUEUENAME': 'emulated',
@@ -200,7 +208,7 @@ class CloudTaskRequest(object):
     @classmethod
     def from_cloud_request(cls, request):
         request_headers = request.META
-        task_id = request_headers.get('HTTP_X_APPENGINE_TASKNAME')
+        task_id = request_headers.get('HTTP_X_APPENGINE_TASKNAME') or request_headers.get('HTTP_X_CLOUDTASKS_TASKNAME')
         return cls(
             request=request,
             task_id=task_id,

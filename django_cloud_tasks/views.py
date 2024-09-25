@@ -1,11 +1,13 @@
-from django.http import JsonResponse
-import logging
-from django.views.decorators.csrf import csrf_exempt
 import json
-from .registries import registry
+import logging
+
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+
+from .apps import DCTConfig
 from .base import CloudTaskRequest
 from .constants import DJANGO_HANDLER_SECRET_HEADER_NAME
-from .apps import DCTConfig
+from .registries import registry
 
 
 logger = logging.getLogger(__name__)
@@ -27,10 +29,10 @@ def run_task(request):
     handler_key = request_headers.pop(DJANGO_HANDLER_SECRET_HEADER_NAME, None)
 
     logger_extra = {
-        'taskName': task_name,
-        'taskQueueName': task_queue_name,
-        'taskBody': body,
-        'taskRequestHeaders': dict(request_headers)
+        '_taskName': task_name,
+        '_taskQueueName': task_queue_name,
+        '_taskBody': body,
+        '_taskRequestHeaders': dict(request_headers)
     }
     try:
         if DCTConfig.handler_secret():

@@ -28,6 +28,10 @@ class DCTConfig(AppConfig):
         return cls._settings().get('task_handler_root_url')
 
     @classmethod
+    def task_dispatch_deadline(cls):
+        return cls._settings().get('task_dispatch_deadline', '1800s')
+
+    @classmethod
     def execute_locally(cls):
         return getattr(settings, 'DJANGO_CLOUD_TASKS_EXECUTE_LOCALLY', False)
 

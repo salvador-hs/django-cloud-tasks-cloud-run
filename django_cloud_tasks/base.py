@@ -227,6 +227,7 @@ class CloudTaskWrapper(object):
         self._connection = None
         self._internal_task_name = internal_task_name or self._base_task.internal_task_name
         self._task_handler_url = task_handler_url or DCTConfig.task_handler_root_url()
+        self._dispatch_deadline = DCTConfig.task_dispatch_deadline()
         self._handler_secret = DCTConfig.handler_secret()
         self._is_remote = is_remote
         self._headers = headers or {}
@@ -297,6 +298,7 @@ class CloudTaskWrapper(object):
     def get_appengine_body(self):
         body = {
             'task': {
+                'dispatchDeadline': self._dispatch_deadline,
                 'appEngineHttpRequest': {
                     'httpMethod': 'POST',
                     'relativeUri': self._task_handler_url,
@@ -310,9 +312,10 @@ class CloudTaskWrapper(object):
             'data': self._data
         }
         payload = json.dumps(payload, cls=ComplexEncoder)
-        logger.debug('Creating task with body {0}'.format(payload),
-                    extra={'taskBody': payload
-                           })
+        logger.debug(
+            'Creating task with body {0}'.format(payload),
+            extra={'taskBody': payload}
+        )
         base64_encoded_payload = base64.b64encode(payload.encode())
         converted_payload = base64_encoded_payload.decode()
 
@@ -322,6 +325,7 @@ class CloudTaskWrapper(object):
     def get_http_body(self):
         body = {
             'task': {
+                'dispatchDeadline': self._dispatch_deadline,
                 'httpRequest': {
                     'httpMethod': 'POST',
                     'url': self._task_handler_url,
